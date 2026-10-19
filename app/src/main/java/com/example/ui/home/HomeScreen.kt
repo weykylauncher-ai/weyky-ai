@@ -389,6 +389,24 @@ private fun LandscapeThreeColumnHomeScreen(
   val hasFallbackEvent = uiState.importantEvents.isNotEmpty()
   val hasAlert = isLowBattery || isBatteryFull || hasMissedCall || hasUrgentNotif || hasFallbackEvent
 
+  // Central column adaptive weight:
+  // Preserves strict horizontal centering via equal side weights (1f each),
+  // while scaling the workspace appropriately for different screen widths.
+  val middleColumnWeight = when {
+    deviceProfile.windowWidthDp >= 900.dp -> 1.45f
+    deviceProfile.windowWidthDp >= 700.dp -> 1.35f
+    else -> 1.25f
+  }
+
+  // Adaptive response card max height:
+  // On shorter screens, leaves ample space for the core and input card.
+  // On taller screens or tablets, allows more response text to be visible without unnecessary scrolling.
+  val responseMaxHeight = when {
+    deviceProfile.windowHeightDp < 380.dp -> (deviceProfile.windowHeightDp * 0.25f).coerceIn(56.dp, 88.dp)
+    deviceProfile.windowHeightDp < 550.dp -> (deviceProfile.windowHeightDp * 0.30f).coerceIn(80.dp, 130.dp)
+    else -> (deviceProfile.windowHeightDp * 0.32f).coerceIn(120.dp, 220.dp)
+  }
+
   Row(
     modifier = Modifier
       .fillMaxSize()
@@ -396,7 +414,7 @@ private fun LandscapeThreeColumnHomeScreen(
         horizontal = deviceProfile.contentPaddingHorizontalDp,
         vertical = deviceProfile.contentPaddingVerticalDp
       ),
-    horizontalArrangement = Arrangement.spacedBy(8.dp),
+    horizontalArrangement = Arrangement.spacedBy(deviceProfile.cardSpacingDp),
     verticalAlignment = Alignment.CenterVertically
   ) {
     // 1. START SIDE COLUMN: Weather card at top, contextual cards in middle, Settings button at bottom
@@ -415,7 +433,7 @@ private fun LandscapeThreeColumnHomeScreen(
         textPrimary = textPrimary,
         textSecondary = textSecondary,
         textMuted = textMuted,
-        density = CardDensity.COMPACT,
+        density = deviceProfile.cardDensity,
         onQuerySubmit = onQuerySubmit,
         modifier = Modifier.fillMaxWidth()
       )
@@ -464,7 +482,7 @@ private fun LandscapeThreeColumnHomeScreen(
     // 2. MIDDLE COLUMN: Living Core, Text Display Card (Response Card), and Typing Card (Input Card)
     Column(
       modifier = Modifier
-        .weight(1.35f)
+        .weight(middleColumnWeight)
         .fillMaxHeight(),
       verticalArrangement = Arrangement.SpaceBetween,
       horizontalAlignment = Alignment.CenterHorizontally
@@ -476,8 +494,9 @@ private fun LandscapeThreeColumnHomeScreen(
           .fillMaxWidth(),
         contentAlignment = Alignment.Center
       ) {
-        val availH = maxHeight
-        val coreSize = minOf(dynamicCoreSize, availH * 0.95f).coerceAtLeast(80.dp)
+        val maxAvailableDim = minOf(maxHeight, maxWidth)
+        val coreSize = minOf(dynamicCoreSize, maxAvailableDim * 0.94f)
+          .coerceIn(minOf(56.dp, maxAvailableDim * 0.8f), 380.dp)
         HomeCoreSection(
           uiState = uiState,
           coreSizeDp = coreSize,
@@ -491,7 +510,7 @@ private fun LandscapeThreeColumnHomeScreen(
           modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 6.dp)
-            .heightIn(max = 130.dp)
+            .heightIn(max = responseMaxHeight)
             .verticalScroll(rememberScrollState())
         ) {
           HomeResponseCard(
@@ -538,7 +557,7 @@ private fun LandscapeThreeColumnHomeScreen(
         textPrimary = textPrimary,
         textSecondary = textSecondary,
         textMuted = textMuted,
-        density = CardDensity.COMPACT,
+        density = deviceProfile.cardDensity,
         onQuerySubmit = onQuerySubmit,
         modifier = Modifier.fillMaxWidth()
       )

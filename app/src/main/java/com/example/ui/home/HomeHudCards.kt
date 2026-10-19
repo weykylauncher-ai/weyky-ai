@@ -716,7 +716,7 @@ fun HomeLandscapeSettingsButton(
     onClick = onClick,
     modifier = modifier
       .fillMaxWidth()
-      .height(44.dp)
+      .height(48.dp)
       .testTag("settings_button")
   ) {
     Row(
@@ -764,7 +764,7 @@ fun HomeLandscapeAppDrawerButton(
     onClick = onClick,
     modifier = modifier
       .fillMaxWidth()
-      .height(44.dp)
+      .height(48.dp)
       .testTag("app_drawer_button")
   ) {
     Row(

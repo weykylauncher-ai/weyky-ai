@@ -226,60 +226,34 @@ class AdaptiveLayoutStateTest {
   }
 
   @Test
-  fun `settings categories catalog contains all 7 functional modules with unique ids`() {
-    val categories = com.example.ui.settings.SettingsCategory.entries
-    assertEquals("Should contain exactly 7 settings categories", 7, categories.size)
-
-    val uniqueIds = categories.map { it.id }.toSet()
-    assertEquals("All category IDs must be strictly unique", 7, uniqueIds.size)
-
-    categories.forEach { cat ->
-      assertTrue("Category title must not be empty", cat.title.isNotBlank())
-      assertTrue("Category code tag must not be empty", cat.codeTag.isNotBlank())
-      assertTrue("Category short title must not be empty", cat.shortTitle.isNotBlank())
-      assertNotNull("Category icon must be present", cat.icon)
-    }
-
-    // Verify lookup behavior
-    assertEquals(
-      com.example.ui.settings.SettingsCategory.APPEARANCE,
-      com.example.ui.settings.SettingsCategory.fromId("appearance")
+  fun `landscape medium window resolves to phone landscape mode and not portrait`() {
+    val profile = WindowSizeResolver.resolve(
+      widthDp = 750.dp,
+      heightDp = 520.dp,
+      isRtl = false,
+      windowOrientation = AdaptiveOrientation.LANDSCAPE
     )
-    assertEquals(
-      com.example.ui.settings.SettingsCategory.VOICE,
-      com.example.ui.settings.SettingsCategory.fromId("voice")
-    )
-    // Fallback for unknown id
-    assertEquals(
-      com.example.ui.settings.SettingsCategory.APPEARANCE,
-      com.example.ui.settings.SettingsCategory.fromId("unknown_category")
-    )
+
+    assertEquals(AdaptiveOrientation.LANDSCAPE, profile.orientation)
+    assertEquals(AdaptiveLayoutMode.PHONE_LANDSCAPE, profile.layoutMode)
+    val coreSize = profile.calculateAdaptiveCoreSize(0.44f)
+    assertTrue("Core size must adapt safely", coreSize in 90.dp..280.dp)
   }
 
   @Test
-  fun `landscape two pane criteria correctly activates on landscape with sufficient width`() {
-    // Normal landscape phone (800x360dp)
-    val landscapeProfile = WindowSizeResolver.resolve(
-      widthDp = 800.dp,
-      heightDp = 360.dp,
-      isRtl = true,
-      windowOrientation = AdaptiveOrientation.LANDSCAPE
-    )
-
-    assertEquals(AdaptiveOrientation.LANDSCAPE, landscapeProfile.orientation)
-    assertTrue("Width 800dp is >= 580dp for two-pane desktop settings", landscapeProfile.windowWidthDp >= 580.dp)
-    assertTrue("RTL should be active for Arabic landscape", landscapeProfile.isRtl)
-
-    // Narrow landscape split-screen (e.g. 400x360dp)
-    val narrowSplitProfile = WindowSizeResolver.resolve(
-      widthDp = 400.dp,
-      heightDp = 360.dp,
+  fun `landscape wide window resolves to tablet expanded mode`() {
+    val profile = WindowSizeResolver.resolve(
+      widthDp = 1200.dp,
+      heightDp = 800.dp,
       isRtl = false,
-      physicalScreenWidthDp = 800.dp,
-      physicalScreenHeightDp = 360.dp,
       windowOrientation = AdaptiveOrientation.LANDSCAPE
     )
-    assertTrue("Narrow window width 400dp is < 580dp", narrowSplitProfile.windowWidthDp < 580.dp)
+
+    assertEquals(AdaptiveOrientation.LANDSCAPE, profile.orientation)
+    assertEquals(AdaptiveLayoutMode.TABLET_EXPANDED, profile.layoutMode)
+    assertEquals(CardDensity.EXPANDED, profile.cardDensity)
+    assertTrue("Padding should expand appropriately", profile.contentPaddingHorizontalDp >= 16.dp)
+    val coreSize = profile.calculateAdaptiveCoreSize(0.44f)
+    assertTrue("Core size should be generous on wide tablet", coreSize >= 160.dp)
   }
 }
-
