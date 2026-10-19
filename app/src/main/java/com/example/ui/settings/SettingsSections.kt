@@ -59,10 +59,6 @@ import com.example.ui.theme.JarvisHudColors
 import java.io.File
 import java.util.Locale
 
-/**
- * Reusable subsection container to group closely related settings logically.
- * Replaces repetitive full-width cards with structured, scannable groups.
- */
 @Composable
 fun SettingsSubSection(
   title: String,
@@ -121,9 +117,6 @@ fun SettingsSubSection(
   }
 }
 
-// -------------------------------------------------------------------------
-// SECTION 1: Appearance & Interface
-// -------------------------------------------------------------------------
 @Composable
 fun AppearanceSettingsContent(
   uiState: WeykyUiState,
@@ -138,7 +131,6 @@ fun AppearanceSettingsContent(
   onUpdateCardBorderColor: (Long) -> Unit,
   isGrouped: Boolean = false
 ) {
-  // Group A: Core Sizing & Scale
   val coreScaleContent = @Composable {
     Text(
       text = "حجم النواة في الشاشة: ${(uiState.coreScale * 100).toInt()}%",
@@ -159,7 +151,6 @@ fun AppearanceSettingsContent(
     )
   }
 
-  // Group B: Theme Mode Selector
   val themeModeContent = @Composable {
     Text(
       text = "نمط المظهر العام (الوضع الداكن / الوضع الفاتح):",
@@ -174,7 +165,6 @@ fun AppearanceSettingsContent(
     ) {
       val modeShape = CutCornerShape(topStart = 10.dp, bottomEnd = 10.dp, topEnd = 2.dp, bottomStart = 2.dp)
 
-      // Dark Mode Option
       Box(
         modifier = Modifier
           .weight(1f)
@@ -217,7 +207,6 @@ fun AppearanceSettingsContent(
         }
       }
 
-      // Light Mode Option
       Box(
         modifier = Modifier
           .weight(1f)
@@ -262,7 +251,6 @@ fun AppearanceSettingsContent(
     }
   }
 
-  // Group C: Tactical Color Palette (Background & Borders)
   val colorsContent = @Composable {
     Text(
       text = "لون خلفية التطبيق (Background):",
@@ -423,9 +411,6 @@ fun AppearanceSettingsContent(
   }
 }
 
-// -------------------------------------------------------------------------
-// SECTION 2: Power Efficiency
-// -------------------------------------------------------------------------
 @Composable
 fun PowerSettingsContent(
   uiState: WeykyUiState,
@@ -483,9 +468,6 @@ fun PowerSettingsContent(
   }
 }
 
-// -------------------------------------------------------------------------
-// SECTION 3: Context Engine Telemetry
-// -------------------------------------------------------------------------
 @Composable
 fun TelemetrySettingsContent(
   uiState: WeykyUiState,
@@ -535,9 +517,6 @@ fun TelemetrySettingsContent(
   }
 }
 
-// -------------------------------------------------------------------------
-// SECTION 4: Default Launcher Role
-// -------------------------------------------------------------------------
 @Composable
 fun LauncherSettingsContent(
   uiState: WeykyUiState,
@@ -615,9 +594,6 @@ fun LauncherSettingsContent(
   }
 }
 
-// -------------------------------------------------------------------------
-// SECTION 5: Voice Engines & Offline Models
-// -------------------------------------------------------------------------
 @Composable
 fun VoiceSettingsContent(
   uiState: WeykyUiState,
@@ -641,7 +617,6 @@ fun VoiceSettingsContent(
 ) {
   val voiceStatus = uiState.voiceEngineStatus
 
-  // Subgroup 1: Engine Telemetry
   val enginesTelemetry = @Composable {
     Text(
       text = "محرك الاستماع النشط (STT): ${voiceStatus?.sttEngine?.name ?: "جاري الفحص..."}",
@@ -664,7 +639,6 @@ fun VoiceSettingsContent(
     )
   }
 
-  // Subgroup 2: Hybrid Neural Speech
   val hybridSpeechContent = @Composable {
     JarvisHudCard(
       accentColor = if (uiState.isHybridTtsEnabled) borderColor else textSecondary,
@@ -817,7 +791,6 @@ fun VoiceSettingsContent(
     }
   }
 
-  // Subgroup 3: Offline Neural Models (Piper & Vosk)
   val offlineCatalogContent = @Composable {
     val hasInstalledTts = VoiceModelManager.CATALOG.any {
       it.type == VoiceModelType.TTS &&
@@ -962,7 +935,6 @@ fun VoiceSettingsContent(
 
           Spacer(modifier = Modifier.height(10.dp))
 
-          // Action Buttons Row
           Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1147,9 +1119,6 @@ fun VoiceSettingsContent(
   }
 }
 
-// -------------------------------------------------------------------------
-// SECTION 6: System Integration & Permissions
-// -------------------------------------------------------------------------
 @Composable
 fun PermissionsSettingsContent(
   isNotificationAccessGranted: Boolean,
@@ -1212,9 +1181,6 @@ fun PermissionsSettingsContent(
   }
 }
 
-// -------------------------------------------------------------------------
-// SECTION 7: About WEYKY
-// -------------------------------------------------------------------------
 @Composable
 fun AboutSettingsContent(
   isLight: Boolean,

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -344,14 +345,14 @@ private fun PhonePortraitHomeScreen(
 }
 
 /**
- * Phone Landscape Composition.
- * Visual Core is visually centered horizontally and vertically in the usable screen area
- * between the top information area and bottom interaction bar.
- * Flanking side panels arrange optional contextual cards (Response, Music, Alerts) around
- * the core without ever moving or displacing it.
+ * Landscape Three-Column Layout:
+ * - Middle Column: Dedicated to the Living Core, Text Display Card (Response Card), and Typing Card (Input Bar).
+ * - Start Side Column: Dedicated to Weather Card at top, contextual cards (Music/Alerts), and Settings Button at bottom.
+ * - End Side Column: Dedicated to Date Card at top, contextual cards (Alerts/Reminders), and Installed Apps Button at bottom.
+ * Symmetrical weights guarantee the middle column and core remain strictly centered horizontally in the screen.
  */
 @Composable
-private fun PhoneLandscapeHomeScreen(
+private fun LandscapeThreeColumnHomeScreen(
   uiState: WeykyUiState,
   deviceProfile: DeviceProfile,
   borderColor: Color,
@@ -375,94 +376,6 @@ private fun PhoneLandscapeHomeScreen(
 ) {
   val dynamicCoreSize = deviceProfile.calculateAdaptiveCoreSize(uiState.coreScale)
 
-  Column(
-    modifier = Modifier
-      .fillMaxSize()
-      .padding(
-        horizontal = deviceProfile.contentPaddingHorizontalDp,
-        vertical = deviceProfile.contentPaddingVerticalDp
-      ),
-    horizontalAlignment = Alignment.CenterHorizontally,
-    verticalArrangement = Arrangement.SpaceBetween
-  ) {
-    // 1. TOP INFORMATION ROW: Date & Weather cards (Centered horizontally)
-    HomeTopRowCards(
-      uiState = uiState,
-      borderColor = borderColor,
-      panelBg = panelBg,
-      textPrimary = textPrimary,
-      textSecondary = textSecondary,
-      textMuted = textMuted,
-      density = CardDensity.COMPACT,
-      onQuerySubmit = onQuerySubmit,
-      modifier = Modifier.widthIn(max = 720.dp)
-    )
-
-    // 2. MIDDLE USABLE AREA: The Living Core is visually centered horizontally & vertically
-    LandscapeCenteredCoreWorkspace(
-      uiState = uiState,
-      dynamicCoreSize = dynamicCoreSize,
-      borderColor = borderColor,
-      panelBg = panelBg,
-      panelBgElevated = panelBgElevated,
-      textPrimary = textPrimary,
-      textSecondary = textSecondary,
-      onToggleVoice = onToggleVoice,
-      onQuerySubmit = onQuerySubmit,
-      onConfirmOption = onConfirmOption,
-      onRequestPermission = onRequestPermission,
-      onToggleMediaPlayback = onToggleMediaPlayback,
-      onNextMediaTrack = onNextMediaTrack,
-      onPreviousMediaTrack = onPreviousMediaTrack,
-      modifier = Modifier.weight(1f)
-    )
-
-    // 3. BOTTOM INTERACTION BAR: Settings, Input Query, Voice Mic, App Drawer (Centered horizontally)
-    HomeBottomControlRow(
-      uiState = uiState,
-      borderColor = borderColor,
-      panelBg = panelBg,
-      panelBgElevated = panelBgElevated,
-      textPrimary = textPrimary,
-      textSecondary = textSecondary,
-      isLight = isLight,
-      onQueryChange = onQueryChange,
-      onQuerySubmit = onQuerySubmit,
-      onToggleVoice = onToggleVoice,
-      onOpenSettings = onOpenSettings,
-      onToggleAppDrawer = onToggleAppDrawer,
-      keyboardController = keyboardController,
-      modifier = Modifier.widthIn(max = 720.dp)
-    )
-  }
-}
-
-/**
- * Unified Centered Core Workspace for all Landscape Orientations (Phone & Tablet).
- * Mathematically and visually guarantees that the Living Visual Core is situated at the
- * exact 50% horizontal center of the usable screen and 50% vertical center between the top
- * information row and the bottom interaction bar.
- * Optional contextual panels (Assistant response, Music, Alerts) flank the core on the Start
- * and End sides without ever moving or displacing the core.
- */
-@Composable
-private fun LandscapeCenteredCoreWorkspace(
-  uiState: WeykyUiState,
-  dynamicCoreSize: androidx.compose.ui.unit.Dp,
-  borderColor: Color,
-  panelBg: Color,
-  panelBgElevated: Color,
-  textPrimary: Color,
-  textSecondary: Color,
-  onToggleVoice: () -> Unit,
-  onQuerySubmit: (String) -> Unit,
-  onConfirmOption: (String) -> Unit,
-  onRequestPermission: (String) -> Unit,
-  onToggleMediaPlayback: () -> Unit,
-  onNextMediaTrack: () -> Unit,
-  onPreviousMediaTrack: () -> Unit,
-  modifier: Modifier = Modifier
-) {
   val isMusicActivelyPlaying = uiState.isMusicPlaying || (uiState.activeMediaMetadata?.isPlaying == true)
   val hasResponse = !uiState.lastResponseText.isNullOrBlank()
   val battery = uiState.batterySnapshot
@@ -476,124 +389,238 @@ private fun LandscapeCenteredCoreWorkspace(
   val hasFallbackEvent = uiState.importantEvents.isNotEmpty()
   val hasAlert = isLowBattery || isBatteryFull || hasMissedCall || hasUrgentNotif || hasFallbackEvent
 
-  BoxWithConstraints(
-    modifier = modifier.fillMaxWidth(),
-    contentAlignment = Alignment.Center
+  Row(
+    modifier = Modifier
+      .fillMaxSize()
+      .padding(
+        horizontal = deviceProfile.contentPaddingHorizontalDp,
+        vertical = deviceProfile.contentPaddingVerticalDp
+      ),
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
+    verticalAlignment = Alignment.CenterVertically
   ) {
-    val availableWidth = maxWidth
-    // Calculate the maximum width available for flanking side panels so they never touch or overlap the core
-    val sidePanelMaxWidth = ((availableWidth - dynamicCoreSize) / 2f - 20.dp).coerceAtLeast(0.dp)
+    // 1. START SIDE COLUMN: Weather card at top, contextual cards in middle, Settings button at bottom
+    Column(
+      modifier = Modifier
+        .weight(1f)
+        .fillMaxHeight(),
+      verticalArrangement = Arrangement.SpaceBetween,
+      horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+      // Top: Weather Card
+      HomeWeatherCard(
+        uiState = uiState,
+        borderColor = borderColor,
+        panelBg = panelBg,
+        textPrimary = textPrimary,
+        textSecondary = textSecondary,
+        textMuted = textMuted,
+        density = CardDensity.COMPACT,
+        onQuerySubmit = onQuerySubmit,
+        modifier = Modifier.fillMaxWidth()
+      )
 
-    // 1. CENTER LAYER: The Living Visual Core (Hero)
-    // Anchored directly to Alignment.Center of the usable space
-    HomeCoreSection(
-      uiState = uiState,
-      coreSizeDp = dynamicCoreSize,
-      onToggleVoice = onToggleVoice,
-      modifier = Modifier.align(Alignment.Center)
-    )
-
-    // 2. FLANKING CONTEXTUAL PANELS
-    // Only displayed when there is sufficient side space to avoid crowding or covering the core
-    if (sidePanelMaxWidth >= 140.dp) {
-      val panelMaxConstraint = minOf(sidePanelMaxWidth, 350.dp)
-
-      Row(
+      // Middle: Active auxiliary cards (Music / Context Alerts)
+      Column(
         modifier = Modifier
-          .fillMaxSize()
-          .padding(horizontal = 6.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+          .weight(1f)
+          .fillMaxWidth()
+          .padding(vertical = 4.dp)
+          .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
       ) {
-        // START SIDE PANEL: Assistant Response (or Music if no response)
-        Box(
-          modifier = Modifier
-            .widthIn(max = panelMaxConstraint)
-            .fillMaxHeight(),
-          contentAlignment = Alignment.CenterStart
-        ) {
-          if (hasResponse) {
-            Column(
-              modifier = Modifier
-                .widthIn(max = panelMaxConstraint)
-                .verticalScroll(rememberScrollState())
-            ) {
-              HomeResponseCard(
-                uiState = uiState,
-                borderColor = borderColor,
-                panelBg = panelBg,
-                panelBgElevated = panelBgElevated,
-                textPrimary = textPrimary,
-                onQuerySubmit = onQuerySubmit,
-                onConfirmOption = onConfirmOption,
-                onRequestPermission = onRequestPermission
-              )
-            }
-          } else if (isMusicActivelyPlaying) {
-            Column(
-              modifier = Modifier
-                .widthIn(max = panelMaxConstraint)
-                .verticalScroll(rememberScrollState())
-            ) {
-              HomeMusicCard(
-                uiState = uiState,
-                borderColor = borderColor,
-                panelBgElevated = panelBgElevated,
-                textPrimary = textPrimary,
-                textSecondary = textSecondary,
-                onToggleMediaPlayback = onToggleMediaPlayback,
-                onNextMediaTrack = onNextMediaTrack,
-                onPreviousMediaTrack = onPreviousMediaTrack
-              )
-            }
-          }
-        }
-
-        // END SIDE PANEL: Music / Alert cards (arranged on the opposite flank)
-        Box(
-          modifier = Modifier
-            .widthIn(max = panelMaxConstraint)
-            .fillMaxHeight(),
-          contentAlignment = Alignment.CenterEnd
-        ) {
-          val showMusicOnEnd = hasResponse && isMusicActivelyPlaying
-          val showAlertsOnEnd = hasAlert
-
-          if (showMusicOnEnd || showAlertsOnEnd) {
-            Column(
-              modifier = Modifier
-                .widthIn(max = panelMaxConstraint)
-                .verticalScroll(rememberScrollState()),
-              verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-              if (showMusicOnEnd) {
-                HomeMusicCard(
-                  uiState = uiState,
-                  borderColor = borderColor,
-                  panelBgElevated = panelBgElevated,
-                  textPrimary = textPrimary,
-                  textSecondary = textSecondary,
-                  onToggleMediaPlayback = onToggleMediaPlayback,
-                  onNextMediaTrack = onNextMediaTrack,
-                  onPreviousMediaTrack = onPreviousMediaTrack
-                )
-              }
-
-              if (showAlertsOnEnd) {
-                HomeContextAlertCard(
-                  uiState = uiState,
-                  borderColor = borderColor,
-                  onQuerySubmit = onQuerySubmit
-                )
-              }
-            }
-          }
+        if (isMusicActivelyPlaying) {
+          HomeMusicCard(
+            uiState = uiState,
+            borderColor = borderColor,
+            panelBgElevated = panelBgElevated,
+            textPrimary = textPrimary,
+            textSecondary = textSecondary,
+            onToggleMediaPlayback = onToggleMediaPlayback,
+            onNextMediaTrack = onNextMediaTrack,
+            onPreviousMediaTrack = onPreviousMediaTrack
+          )
+        } else if (hasAlert) {
+          HomeContextAlertCard(
+            uiState = uiState,
+            borderColor = borderColor,
+            onQuerySubmit = onQuerySubmit
+          )
         }
       }
+
+      // Bottom: Settings Button
+      HomeLandscapeSettingsButton(
+        borderColor = borderColor,
+        panelBgElevated = panelBgElevated,
+        textPrimary = textPrimary,
+        isRtl = deviceProfile.isRtl,
+        onClick = onOpenSettings,
+        modifier = Modifier.fillMaxWidth()
+      )
+    }
+
+    // 2. MIDDLE COLUMN: Living Core, Text Display Card (Response Card), and Typing Card (Input Card)
+    Column(
+      modifier = Modifier
+        .weight(1.35f)
+        .fillMaxHeight(),
+      verticalArrangement = Arrangement.SpaceBetween,
+      horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+      // Center Stage: Living Visual Core
+      BoxWithConstraints(
+        modifier = Modifier
+          .weight(1f)
+          .fillMaxWidth(),
+        contentAlignment = Alignment.Center
+      ) {
+        val availH = maxHeight
+        val coreSize = minOf(dynamicCoreSize, availH * 0.95f).coerceAtLeast(80.dp)
+        HomeCoreSection(
+          uiState = uiState,
+          coreSizeDp = coreSize,
+          onToggleVoice = onToggleVoice
+        )
+      }
+
+      // Text Display Card: Assistant Response Bubble (when active)
+      if (hasResponse) {
+        Box(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 6.dp)
+            .heightIn(max = 130.dp)
+            .verticalScroll(rememberScrollState())
+        ) {
+          HomeResponseCard(
+            uiState = uiState,
+            borderColor = borderColor,
+            panelBg = panelBg,
+            panelBgElevated = panelBgElevated,
+            textPrimary = textPrimary,
+            onQuerySubmit = onQuerySubmit,
+            onConfirmOption = onConfirmOption,
+            onRequestPermission = onRequestPermission
+          )
+        }
+      }
+
+      // Typing Card: Input Bar with voice mic, query field, and submit button
+      HomeInputCard(
+        uiState = uiState,
+        borderColor = borderColor,
+        panelBg = panelBg,
+        textPrimary = textPrimary,
+        textSecondary = textSecondary,
+        onQueryChange = onQueryChange,
+        onQuerySubmit = onQuerySubmit,
+        onToggleVoice = onToggleVoice,
+        keyboardController = keyboardController,
+        modifier = Modifier.fillMaxWidth()
+      )
+    }
+
+    // 3. END SIDE COLUMN: Date card at top, contextual cards in middle, Apps button at bottom
+    Column(
+      modifier = Modifier
+        .weight(1f)
+        .fillMaxHeight(),
+      verticalArrangement = Arrangement.SpaceBetween,
+      horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+      // Top: Date Card
+      HomeDateCard(
+        uiState = uiState,
+        borderColor = borderColor,
+        panelBg = panelBg,
+        textPrimary = textPrimary,
+        textSecondary = textSecondary,
+        textMuted = textMuted,
+        density = CardDensity.COMPACT,
+        onQuerySubmit = onQuerySubmit,
+        modifier = Modifier.fillMaxWidth()
+      )
+
+      // Middle: Active auxiliary cards (Context alerts if music occupies Column 1)
+      Column(
+        modifier = Modifier
+          .weight(1f)
+          .fillMaxWidth()
+          .padding(vertical = 4.dp)
+          .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+      ) {
+        if (hasAlert && isMusicActivelyPlaying) {
+          HomeContextAlertCard(
+            uiState = uiState,
+            borderColor = borderColor,
+            onQuerySubmit = onQuerySubmit
+          )
+        }
+      }
+
+      // Bottom: Installed Apps Button
+      HomeLandscapeAppDrawerButton(
+        borderColor = borderColor,
+        panelBgElevated = panelBgElevated,
+        textPrimary = textPrimary,
+        isRtl = deviceProfile.isRtl,
+        onClick = onToggleAppDrawer,
+        modifier = Modifier.fillMaxWidth()
+      )
     }
   }
 }
 
+@Composable
+private fun PhoneLandscapeHomeScreen(
+  uiState: WeykyUiState,
+  deviceProfile: DeviceProfile,
+  borderColor: Color,
+  panelBg: Color,
+  panelBgElevated: Color,
+  textPrimary: Color,
+  textSecondary: Color,
+  textMuted: Color,
+  isLight: Boolean,
+  onQuerySubmit: (String) -> Unit,
+  onQueryChange: (String) -> Unit,
+  onOpenSettings: () -> Unit,
+  onRequestPermission: (String) -> Unit,
+  onToggleVoice: () -> Unit,
+  onConfirmOption: (String) -> Unit,
+  onToggleAppDrawer: () -> Unit,
+  onToggleMediaPlayback: () -> Unit,
+  onNextMediaTrack: () -> Unit,
+  onPreviousMediaTrack: () -> Unit,
+  keyboardController: androidx.compose.ui.platform.SoftwareKeyboardController?
+) {
+  LandscapeThreeColumnHomeScreen(
+    uiState = uiState,
+    deviceProfile = deviceProfile,
+    borderColor = borderColor,
+    panelBg = panelBg,
+    panelBgElevated = panelBgElevated,
+    textPrimary = textPrimary,
+    textSecondary = textSecondary,
+    textMuted = textMuted,
+    isLight = isLight,
+    onQuerySubmit = onQuerySubmit,
+    onQueryChange = onQueryChange,
+    onOpenSettings = onOpenSettings,
+    onRequestPermission = onRequestPermission,
+    onToggleVoice = onToggleVoice,
+    onConfirmOption = onConfirmOption,
+    onToggleAppDrawer = onToggleAppDrawer,
+    onToggleMediaPlayback = onToggleMediaPlayback,
+    onNextMediaTrack = onNextMediaTrack,
+    onPreviousMediaTrack = onPreviousMediaTrack,
+    keyboardController = keyboardController
+  )
+}
 
 /**
  * Tablet & Expanded Window Composition.
@@ -632,8 +659,7 @@ private fun TabletExpandedHomeScreen(
   keyboardController: androidx.compose.ui.platform.SoftwareKeyboardController?
 ) {
   val dynamicCoreSize = deviceProfile.calculateAdaptiveCoreSize(uiState.coreScale)
-  val isLandscape = deviceProfile.orientation == AdaptiveOrientation.LANDSCAPE &&
-    deviceProfile.windowWidthDp >= 840.dp
+  val isLandscape = deviceProfile.orientation == AdaptiveOrientation.LANDSCAPE
   val isBookPosture = deviceProfile.posture == DevicePosture.BOOK
 
   val isMusicActivelyPlaying = uiState.isMusicPlaying || (uiState.activeMediaMetadata?.isPlaying == true)
@@ -648,8 +674,6 @@ private fun TabletExpandedHomeScreen(
   val hasUrgentNotif = (uiState.notificationSummary?.totalImportantCount ?: 0) > 0
   val hasFallbackEvent = uiState.importantEvents.isNotEmpty()
   val hasAlert = isLowBattery || isBatteryFull || hasMissedCall || hasUrgentNotif || hasFallbackEvent
-
-  val hasActiveContextualContent = isMusicActivelyPlaying || hasResponse || hasAlert
 
   when {
     // 1. Foldable Book Posture: Two physical screen halves split by the vertical hinge
@@ -760,69 +784,30 @@ private fun TabletExpandedHomeScreen(
       }
     }
 
-    // 2. Wide Landscape Tablet: Visual Core is visually centered horizontally and vertically
-    // Flanking side panels arrange optional contextual cards (Response, Music, Alerts) without displacing the core
+    // 2. Landscape Tablet: Three-column tactical layout with centered core and flanking panels
     isLandscape -> {
-      Column(
-        modifier = Modifier
-          .fillMaxSize()
-          .padding(
-            horizontal = deviceProfile.contentPaddingHorizontalDp,
-            vertical = deviceProfile.contentPaddingVerticalDp
-          ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
-      ) {
-        // Top information row: Weather + Date, centered with balanced width
-        HomeTopRowCards(
-          uiState = uiState,
-          borderColor = borderColor,
-          panelBg = panelBg,
-          textPrimary = textPrimary,
-          textSecondary = textSecondary,
-          textMuted = textMuted,
-          density = deviceProfile.cardDensity,
-          onQuerySubmit = onQuerySubmit,
-          modifier = Modifier.widthIn(max = 760.dp)
-        )
-
-        // Middle workspace: Visual Core centered horizontally and vertically, flanked by contextual panels
-        LandscapeCenteredCoreWorkspace(
-          uiState = uiState,
-          dynamicCoreSize = dynamicCoreSize,
-          borderColor = borderColor,
-          panelBg = panelBg,
-          panelBgElevated = panelBgElevated,
-          textPrimary = textPrimary,
-          textSecondary = textSecondary,
-          onToggleVoice = onToggleVoice,
-          onQuerySubmit = onQuerySubmit,
-          onConfirmOption = onConfirmOption,
-          onRequestPermission = onRequestPermission,
-          onToggleMediaPlayback = onToggleMediaPlayback,
-          onNextMediaTrack = onNextMediaTrack,
-          onPreviousMediaTrack = onPreviousMediaTrack,
-          modifier = Modifier.weight(1f)
-        )
-
-        // Bottom interaction row: Settings, Input, and App Drawer
-        HomeBottomControlRow(
-          uiState = uiState,
-          borderColor = borderColor,
-          panelBg = panelBg,
-          panelBgElevated = panelBgElevated,
-          textPrimary = textPrimary,
-          textSecondary = textSecondary,
-          isLight = isLight,
-          onQueryChange = onQueryChange,
-          onQuerySubmit = onQuerySubmit,
-          onToggleVoice = onToggleVoice,
-          onOpenSettings = onOpenSettings,
-          onToggleAppDrawer = onToggleAppDrawer,
-          keyboardController = keyboardController,
-          modifier = Modifier.widthIn(max = 760.dp)
-        )
-      }
+      LandscapeThreeColumnHomeScreen(
+        uiState = uiState,
+        deviceProfile = deviceProfile,
+        borderColor = borderColor,
+        panelBg = panelBg,
+        panelBgElevated = panelBgElevated,
+        textPrimary = textPrimary,
+        textSecondary = textSecondary,
+        textMuted = textMuted,
+        isLight = isLight,
+        onQuerySubmit = onQuerySubmit,
+        onQueryChange = onQueryChange,
+        onOpenSettings = onOpenSettings,
+        onRequestPermission = onRequestPermission,
+        onToggleVoice = onToggleVoice,
+        onConfirmOption = onConfirmOption,
+        onToggleAppDrawer = onToggleAppDrawer,
+        onToggleMediaPlayback = onToggleMediaPlayback,
+        onNextMediaTrack = onNextMediaTrack,
+        onPreviousMediaTrack = onPreviousMediaTrack,
+        keyboardController = keyboardController
+      )
     }
 
     // 4. Portrait Tablet: Single-column centered vertical composition with optimal proportions

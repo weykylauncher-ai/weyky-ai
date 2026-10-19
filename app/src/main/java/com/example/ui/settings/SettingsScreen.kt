@@ -99,7 +99,6 @@ fun SettingsScreen(
     pendingModelForFileInstall = null
   }
 
-  // Selected category state preserved across device orientation & configuration changes
   var selectedCategoryId by rememberSaveable { mutableStateOf(SettingsCategory.APPEARANCE.id) }
   val selectedCategory = SettingsCategory.fromId(selectedCategoryId)
 
@@ -127,8 +126,6 @@ fun SettingsScreen(
       containerHeightDp = maxHeight
     )
 
-    // Two-pane desktop style layout active in landscape mode with sufficient window width (>= 580dp)
-    // In narrow split-screen landscape (< 580dp), safely falls back to compact single-pane layout
     val isLandscapeTwoPane = deviceProfile.orientation == AdaptiveOrientation.LANDSCAPE &&
       maxWidth >= 580.dp &&
       (!deviceProfile.isSplitScreen || maxWidth >= 680.dp)
@@ -197,12 +194,6 @@ fun SettingsScreen(
   }
 }
 
-/**
- * LANDSCAPE TWO-PANE SETTINGS LAYOUT (DESKTOP STYLE)
- * - Pane A (Navigation Rail): Placed on Start (Right in Arabic RTL, Left in English LTR)
- * - Pane B (Selected Content): Placed on End (Left in Arabic RTL, Right in English LTR)
- * Native Compose layout direction handles RTL/LTR automatically.
- */
 @Composable
 private fun LandscapeDesktopSettingsLayout(
   selectedCategory: SettingsCategory,
@@ -236,7 +227,6 @@ private fun LandscapeDesktopSettingsLayout(
 ) {
   val contentScrollState = rememberScrollState()
 
-  // Reset content scroll position when category changes
   LaunchedEffect(selectedCategory) {
     contentScrollState.scrollTo(0)
   }
@@ -246,9 +236,7 @@ private fun LandscapeDesktopSettingsLayout(
       .fillMaxSize()
       .padding(horizontal = 12.dp, vertical = 8.dp)
   ) {
-    // -----------------------------------------------------------------------
     // PANE A: MAIN SETTINGS CATEGORIES (NAVIGATION RAIL)
-    // -----------------------------------------------------------------------
     Column(
       modifier = Modifier
         .width(260.dp)
@@ -256,7 +244,6 @@ private fun LandscapeDesktopSettingsLayout(
         .padding(end = 12.dp)
         .testTag("settings_navigation_pane")
     ) {
-      // Top Navigation Header
       Row(
         modifier = Modifier
           .fillMaxWidth()
@@ -300,7 +287,6 @@ private fun LandscapeDesktopSettingsLayout(
         }
       }
 
-      // Scrollable Category Navigation List
       Column(
         modifier = Modifier
           .weight(1f)
@@ -337,14 +323,12 @@ private fun LandscapeDesktopSettingsLayout(
               verticalAlignment = Alignment.CenterVertically,
               horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-              // Active Indicator bar on Start edge
               Box(
                 modifier = Modifier
                   .size(3.dp, 24.dp)
                   .background(if (isSelected) borderColor else Color.Transparent)
               )
 
-              // Category Icon
               Icon(
                 imageVector = category.icon,
                 contentDescription = category.shortTitle,
@@ -377,7 +361,6 @@ private fun LandscapeDesktopSettingsLayout(
 
       Spacer(modifier = Modifier.height(6.dp))
 
-      // Navigation Pane Footer
       Text(
         text = "WEYKY OS // DESKTOP CORE",
         fontSize = 8.sp,
@@ -387,9 +370,7 @@ private fun LandscapeDesktopSettingsLayout(
       )
     }
 
-    // -----------------------------------------------------------------------
-    // VERTICAL DIVIDER BETWEEN PANES
-    // -----------------------------------------------------------------------
+    // VERTICAL DIVIDER
     Box(
       modifier = Modifier
         .width(1.dp)
@@ -397,9 +378,7 @@ private fun LandscapeDesktopSettingsLayout(
         .background(borderColor.copy(alpha = 0.25f))
     )
 
-    // -----------------------------------------------------------------------
     // PANE B: SELECTED CATEGORY CONTENT
-    // -----------------------------------------------------------------------
     Column(
       modifier = Modifier
         .weight(1f)
@@ -407,7 +386,6 @@ private fun LandscapeDesktopSettingsLayout(
         .padding(start = 16.dp)
         .testTag("settings_content_pane")
     ) {
-      // Selected Category Header
       Column(
         modifier = Modifier
           .fillMaxWidth()
@@ -466,7 +444,6 @@ private fun LandscapeDesktopSettingsLayout(
         )
       }
 
-      // Category Content (Independent Vertical Scrolling)
       Column(
         modifier = Modifier
           .fillMaxSize()
@@ -581,10 +558,6 @@ private fun LandscapeDesktopSettingsLayout(
   }
 }
 
-/**
- * PORTRAIT AND COMPACT FALLBACK SETTINGS LAYOUT
- * Preserves the previous sequential full-screen list with tactical cards.
- */
 @Composable
 private fun PortraitSettingsLayout(
   uiState: WeykyUiState,
@@ -626,7 +599,6 @@ private fun PortraitSettingsLayout(
         .fillMaxWidth()
         .widthIn(max = 840.dp)
     ) {
-      // Tactical Top Bar
       Row(
         modifier = Modifier
           .fillMaxWidth()
@@ -671,7 +643,6 @@ private fun PortraitSettingsLayout(
 
       Spacer(modifier = Modifier.height(12.dp))
 
-      // SECTION 1: Core Visual Behavior & HUD Theme Customization
       SettingsGroup(
         title = SettingsCategory.APPEARANCE.title,
         codeTag = SettingsCategory.APPEARANCE.codeTag,
@@ -697,7 +668,6 @@ private fun PortraitSettingsLayout(
 
       Spacer(modifier = Modifier.height(16.dp))
 
-      // SECTION 2: Power-Saving Behavior
       SettingsGroup(
         title = SettingsCategory.POWER.title,
         codeTag = SettingsCategory.POWER.codeTag,
@@ -719,7 +689,6 @@ private fun PortraitSettingsLayout(
 
       Spacer(modifier = Modifier.height(16.dp))
 
-      // SECTION 3: Context Engine Diagnostics
       SettingsGroup(
         title = SettingsCategory.CONTEXT.title,
         codeTag = SettingsCategory.CONTEXT.codeTag,
@@ -740,7 +709,6 @@ private fun PortraitSettingsLayout(
 
       Spacer(modifier = Modifier.height(16.dp))
 
-      // SECTION 4: Default Launcher Role
       SettingsGroup(
         title = SettingsCategory.LAUNCHER.title,
         codeTag = SettingsCategory.LAUNCHER.codeTag,
@@ -762,7 +730,6 @@ private fun PortraitSettingsLayout(
 
       Spacer(modifier = Modifier.height(16.dp))
 
-      // SECTION 5: Voice Engines & Offline Models
       SettingsGroup(
         title = SettingsCategory.VOICE.title,
         codeTag = SettingsCategory.VOICE.codeTag,
@@ -795,7 +762,6 @@ private fun PortraitSettingsLayout(
 
       Spacer(modifier = Modifier.height(16.dp))
 
-      // SECTION 6: System Integrations & Permissions
       SettingsGroup(
         title = SettingsCategory.PERMISSIONS.title,
         codeTag = SettingsCategory.PERMISSIONS.codeTag,
@@ -817,7 +783,6 @@ private fun PortraitSettingsLayout(
 
       Spacer(modifier = Modifier.height(16.dp))
 
-      // SECTION 7: About WEYKY
       SettingsGroup(
         title = SettingsCategory.ABOUT.title,
         codeTag = SettingsCategory.ABOUT.codeTag,
